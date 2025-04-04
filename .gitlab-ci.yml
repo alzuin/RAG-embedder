@@ -8,9 +8,9 @@ deploy:
   image: python:3.11
   stage: deploy
   before_script:
-    - pip install boto3 requests
-  script:
+    - apt-get update && apt-get install -y zip
     - pip install -r requirements.txt -t ./package
+  script:
     - cp -r services main.py package/
     - cd package && zip -r ../embedding-api.zip .
     - aws s3 cp embedding-api.zip s3://$LAMBDA_CODE_BUCKET/lambda-code/embedding-api.zip
