@@ -22,7 +22,7 @@ def handler(event, context):
     try:
         body = json.loads(event.get("body", "{}"))
 
-        if route == "/upload" and http_method == "POST":
+        if route == "/embedding-api/upload" and http_method == "POST":
             doc_id = body.get("id") or context.aws_request_id
             combined = combine_fields(body)
             embedding = get_embedding(combined)
@@ -33,7 +33,7 @@ def handler(event, context):
                 "body": json.dumps({"result": result})
             }
 
-        elif route == "/search" and http_method == "POST":
+        elif route == "/embedding-api/search" and http_method == "POST":
             query = body.get("query")
             if not query:
                 raise ValueError("Missing 'query' field")
