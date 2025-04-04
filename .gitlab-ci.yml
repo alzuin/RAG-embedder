@@ -1,21 +1,35 @@
 stages:
+  - build
   - deploy
 
 variables:
   AWS_DEFAULT_REGION: "eu-west-2"
 
-deploy:
-  image: amazon/aws-cli:2.13.6  # ✅ AWS CLI + zip included
-  stage: deploy
+build:
+  image: python:3.11
+  stage: build
   before_script:
-    - yum install -y zip python3-pip
-    - pip3 install -r requirements.txt -t ./package
+    - apt-get update && apt-get install -y zip
+    - pip install boto3 requests -t ./package
   script:
     - cp -r services main.py package/
     - cd package && zip -r ../embedding-api.zip .
+  artifacts:
+    paths:
+      - embedding-api.zip
+    expire_in: 1 hour
+  only:
+    - main
+
+deploy:
+  image: amazon/aws-cli:2.13.6
+  stage: deploy
+  script:
     - aws s3 cp embedding-api.zip s3://$LAMBDA_CODE_BUCKET/lambda-code/embedding-api.zip
     - aws lambda update-function-code --function-name embedding-api-lambda \
       --s3-bucket $LAMBDA_CODE_BUCKET \
       --s3-key lambda-code/embedding-api.zip
+  dependencies:
+    - build
   only:
     - main
