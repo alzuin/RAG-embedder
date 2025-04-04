@@ -2,8 +2,7 @@
 import os
 import requests
 
-# QDRANT_URL = os.getenv("QDRANT_URL")
-QDRANT_URL = "http://172.16.1.188:6333"
+QDRANT_URL = os.getenv("QDRANT_URL")
 
 def store_to_qdrant(id_: str, vector: list):
     payload = {
