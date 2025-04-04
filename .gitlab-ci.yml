@@ -25,12 +25,10 @@ deploy:
   image: amazon/aws-cli:2.13.6
   stage: deploy
   before_script:
-    - echo "DEBUG: printing environment"
-    - printenv
-    - echo "DEBUG: listing files"
-    - ls -l
-    - file embedding-api.zip || echo "File missing or invalid"
-    - test -n "$LAMBDA_CODE_BUCKET" || (echo "LAMBDA_CODE_BUCKET is not set!" && exit 1)
+    - printenv | grep LAMBDA_CODE_BUCKET || echo "LAMBDA_CODE_BUCKET not found!"
+    - ls -lh
+    - file embedding-api.zip || echo "embedding-api.zip is missing or invalid"
+    - '[ -n "$LAMBDA_CODE_BUCKET" ] || (echo "LAMBDA_CODE_BUCKET is not set!" && exit 1)'
   script:
     - aws s3 cp embedding-api.zip s3://$LAMBDA_CODE_BUCKET/lambda-code/embedding-api.zip
     - aws lambda update-function-code --function-name embedding-api-lambda \
