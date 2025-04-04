@@ -9,7 +9,7 @@ def get_embedding(text: str):
     body = json.dumps({"inputText": text})
     response = bedrock.invoke_model(
         body=body,
-        modelId="amazon.titan-embed-text-v2",
+        modelId="amazon.titan-embed-text-v2:0",
         accept="application/json",
         contentType="application/json"
     )
