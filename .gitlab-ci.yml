@@ -24,9 +24,10 @@ build:
 deploy:
   image: amazon/aws-cli:2.13.6
   stage: deploy
+  before_script:
+    - printenv
   script:
     - test -n "$LAMBDA_CODE_BUCKET" || (echo "LAMBDA_CODE_BUCKET is not set!" && exit 1)
-    - printenv
     - aws s3 cp embedding-api.zip s3://$LAMBDA_CODE_BUCKET/lambda-code/embedding-api.zip
     - aws lambda update-function-code --function-name embedding-api-lambda \
       --s3-bucket $LAMBDA_CODE_BUCKET \
