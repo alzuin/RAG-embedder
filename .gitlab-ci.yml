@@ -10,7 +10,7 @@ build:
   stage: build
   before_script:
     - apt-get update && apt-get install -y zip
-    - pip install boto3 requests -t ./package
+    - pip install -r requirements.txt -t ./package
   script:
     - cp -r services main.py package/
     - cd package && zip -r ../embedding-api.zip .
