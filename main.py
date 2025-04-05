@@ -45,7 +45,7 @@ def handler(event, context):
                 "statusCode": 200,
                 "body": json.dumps({"result": result})
             }
-        elif route == "/delete" and http_method == "POST":
+        elif route == "/embedding-api/delete" and http_method == "POST":
             doc_id = body.get("id")
             if not doc_id:
                 raise ValueError("Missing 'id' field")
