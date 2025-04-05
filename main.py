@@ -30,7 +30,10 @@ def handler(event, context):
 
             return {
                 "statusCode": 200,
-                "body": json.dumps({"result": result})
+                "body": json.dumps({
+                    "result": result,
+                    "id": doc_id
+                })
             }
 
         elif route == "/embedding-api/search" and http_method == "POST":
@@ -45,6 +48,25 @@ def handler(event, context):
                 "statusCode": 200,
                 "body": json.dumps({"result": result})
             }
+
+        elif route == "/embedding-api/update" and http_method == "POST":
+            doc_id = body.get("id")
+            if not doc_id:
+                raise ValueError("Missing 'id' field")
+
+            combined = combine_fields(body)
+            embedding = get_embedding(combined)
+            result = store_to_qdrant(doc_id, embedding, body)
+
+            return {
+                "statusCode": 200,
+                "body": json.dumps({
+                    "result": result,
+                    "id": doc_id,
+                    "updated": True
+                })
+            }
+
         elif route == "/embedding-api/delete" and http_method == "POST":
             doc_id = body.get("id")
             if not doc_id:
@@ -55,6 +77,7 @@ def handler(event, context):
                 "statusCode": 200,
                 "body": json.dumps({"result": result})
             }
+
         return {
             "statusCode": 404,
             "body": json.dumps({"error": "Route not found"})
