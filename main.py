@@ -20,63 +20,72 @@ def handler(event, context):
     http_method = event.get("httpMethod", "GET")
 
     try:
-        body = json.loads(event.get("body", "{}"))
-
-        if route == "/embedding-api/upload" and http_method == "POST":
-            doc_id = body.get("id") or context.aws_request_id
-            combined = combine_fields(body)
-            embedding = get_embedding(combined)
-            result = store_to_qdrant(doc_id, embedding, body)
-
-            return {
-                "statusCode": 200,
-                "body": json.dumps({
-                    "result": result,
-                    "id": doc_id
-                })
-            }
-
-        elif route == "/embedding-api/search" and http_method == "POST":
-            query = body.get("query")
-            if not query:
-                raise ValueError("Missing 'query' field")
-
-            embedding = get_embedding(query)
-            result = search_qdrant(embedding)
-
-            return {
-                "statusCode": 200,
-                "body": json.dumps({"result": result})
-            }
-
-        elif route == "/embedding-api/update" and http_method == "POST":
-            doc_id = body.get("id")
+        # Handle routes with IDs (DELETE and PUT operations)
+        if route.startswith("/embedding-api/"):
+            doc_id = route.split("/")[-1]
             if not doc_id:
-                raise ValueError("Missing 'id' field")
+                return {
+                    "statusCode": 400,
+                    "body": json.dumps({"error": "Missing ID in URL"})
+                }
 
-            combined = combine_fields(body)
-            embedding = get_embedding(combined)
-            result = store_to_qdrant(doc_id, embedding, body)
+            if http_method == "DELETE":
+                result = delete_from_qdrant(doc_id)
+                return {
+                    "statusCode": 200,
+                    "body": json.dumps({"result": result})
+                }
 
-            return {
-                "statusCode": 200,
-                "body": json.dumps({
-                    "result": result,
-                    "id": doc_id,
-                    "updated": True
-                })
-            }
+            elif http_method == "PUT":
+                body = json.loads(event.get("body", "{}"))
+                body["id"] = doc_id  # Ensure ID from URL is used
+                combined = combine_fields(body)
+                embedding = get_embedding(combined)
+                result = store_to_qdrant(doc_id, embedding, body)
 
-        elif route == "/embedding-api/delete" and http_method == "POST":
-            doc_id = body.get("id")
-            if not doc_id:
-                raise ValueError("Missing 'id' field")
+                return {
+                    "statusCode": 200,
+                    "body": json.dumps({
+                        "result": result,
+                        "id": doc_id,
+                        "updated": True
+                    })
+                }
 
-            result = delete_from_qdrant(doc_id)
-            return {
-                "statusCode": 200,
-                "body": json.dumps({"result": result})
-            }
+        # Handle base /embedding-api endpoint (GET and POST operations)
+        elif route == "/embedding-api":
+            if http_method == "GET":
+                # Search operation
+                query_params = event.get("queryStringParameters", {}) or {}
+                query = query_params.get("query")
+                if not query:
+                    return {
+                        "statusCode": 400,
+                        "body": json.dumps({"error": "Missing 'query' parameter"})
+                    }
+
+                embedding = get_embedding(query)
+                result = search_qdrant(embedding)
+                return {
+                    "statusCode": 200,
+                    "body": json.dumps({"result": result})
+                }
+
+            elif http_method == "POST":
+                # Create operation
+                body = json.loads(event.get("body", "{}"))
+                doc_id = body.get("id") or context.aws_request_id
+                combined = combine_fields(body)
+                embedding = get_embedding(combined)
+                result = store_to_qdrant(doc_id, embedding, body)
+
+                return {
+                    "statusCode": 201,  # Created
+                    "body": json.dumps({
+                        "result": result,
+                        "id": doc_id
+                    })
+                }
 
         return {
             "statusCode": 404,
