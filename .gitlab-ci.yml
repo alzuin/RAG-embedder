@@ -1,9 +1,22 @@
 stages:
+  - test
   - build
   - deploy
 
 variables:
   AWS_DEFAULT_REGION: "eu-west-2"
+
+test:
+  image: python:3.11
+  stage: test
+  before_script:
+    - pip install -r requirements.txt
+    - pip install pytest
+  script:
+    - pytest tests/test_main.py -v
+  only:
+    - main
+    - merge_requests
 
 build:
   image: python:3.11
@@ -20,6 +33,8 @@ build:
     expire_in: 1 hour
   only:
     - main
+  needs:
+    - test
 
 deploy:
   image:
