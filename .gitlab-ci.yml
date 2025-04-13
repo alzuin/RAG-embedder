@@ -13,7 +13,7 @@ test:
     - pip install -r requirements.txt
     - pip install pytest
   script:
-    - pytest tests/test_main.py -v
+    - PYTHONPATH=$PYTHONPATH:$(pwd) pytest tests/test_main.py -v
   only:
     - main
     - merge_requests
